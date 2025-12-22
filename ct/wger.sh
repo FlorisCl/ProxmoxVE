@@ -35,12 +35,13 @@ function update_script() {
 
     msg_info "Updating $APP to v${RELEASE}"
     temp_file=$(mktemp)
-    curl -fsSL "https://github.com/wger-project/wger/archive/refs/tags/$RELEASE.tar.gz" -o "$temp_file"
+    # TEMP CHANGE FROM $RELEASE TO MAIN
+    curl -fsSL "https://github.com/wger-project/wger/archive/refs/heads/main.tar.gz" -o "$temp_file"
     tar xzf "$temp_file"
-    cp -rf wger-"$RELEASE"/* /home/wger/src
+    cp -rf wger-main/* /home/wger/src
     cd /home/wger/src || exit
-    $STD pip install -r requirements_prod.txt --ignore-installed
-    $STD pip install -e .
+    $STD pip install --upgrade pip
+    $STD pip install .
     $STD python3 manage.py migrate
     $STD python3 manage.py collectstatic --no-input
     $STD yarn install
