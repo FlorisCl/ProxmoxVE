@@ -21,8 +21,7 @@ $STD apt install -y \
 msg_ok "Installed Dependencies"
 
 msg_info "Installing Python"
-$STD apt install -y python3-pip
-rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
+$STD apt install -y python3-venv python3-pip
 msg_ok "Installed Python"
 
 msg_info "Installing Redis"
@@ -36,10 +35,10 @@ NODE_VERSION="22" NODE_MODULE="sass" setup_nodejs
 
 msg_info "Enabling Corepack"
 corepack enable
+msg_ok "Corepack enabled"
 corepack prepare npm@10.5.0 --activate
 corepack disable yarn
 corepack disable pnpm
-msg_ok "Corepack enabled"
 
 msg_info "Setting up wger"
 $STD adduser wger --disabled-password --gecos ""
@@ -57,8 +56,17 @@ curl -fsSL "https://github.com/wger-project/wger/archive/refs/heads/master.tar.g
 tar xzf "master.tar.gz"
 mv wger-master /home/wger/src
 cd /home/wger/src || exit
-$STD pip install . --ignore-installed --break-system-packages
-$STD pip install psycopg2-binary --break-system-packages
+
+msg_info "Creating Python virtual environment"
+python3 -m venv /home/wger/venv
+source /home/wger/venv/bin/activate
+pip install -U pip setuptools wheel
+msg_ok "Virtual environment ready"
+$STD pip install .
+$STD pip install psycopg2-binary
+
+# $STD pip install . --ignore-installed --break-system-packages
+# $STD pip install psycopg2-binary --break-system-packages
 
 export DJANGO_SETTINGS_MODULE=settings
 export PYTHONPATH=/home/wger/src
@@ -96,7 +104,7 @@ cat <<EOF >/etc/apache2/sites-available/wger.conf
 
 <VirtualHost *:80>
     WSGIApplicationGroup %{GLOBAL}
-    WSGIDaemonProcess wger python-path=/home/wger/src python-home=/home/wger
+    WSGIDaemonProcess wger python-path=/home/wger/src python-home=/home/wger/venv
     WSGIProcessGroup wger
     WSGIScriptAlias / /home/wger/src/wger/wsgi.py
     WSGIPassAuthorization On
@@ -124,14 +132,17 @@ Description=wger Service
 After=network.target
 
 [Service]
-Type=simple
-User=root
-ExecStart=/usr/local/bin/wger start -a 0.0.0.0 -p 3000
-Restart=always
+Type=oneshot
+ExecStart=/bin/true
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
 EOF
+chown -R wger:wger /home/wger/src
+chown -R wger:www-data /home/wger/static /home/wger/media /home/wger/db
+chmod -R 775 /home/wger/static /home/wger/media /home/wger/db
+
 systemctl enable -q --now wger
 msg_ok "Created Service"
 
@@ -145,9 +156,15 @@ Requires=redis-server.service
 [Service]
 Type=simple
 User=wger
+Group=wger
 WorkingDirectory=/home/wger/src
 Environment=DJANGO_SETTINGS_MODULE=settings
-ExecStart=/usr/bin/celery -A wger worker -l info
+Environment=PYTHONPATH=/home/wger/src
+ExecStart=/home/wger/venv/bin/celery -A wger worker -l info
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
 Restart=always
 
 [Install]
@@ -168,9 +185,15 @@ Requires=redis-server.service
 [Service]
 Type=simple
 User=wger
+Group=wger
 WorkingDirectory=/home/wger/src
 Environment=DJANGO_SETTINGS_MODULE=settings
-ExecStart=/usr/bin/celery -A wger beat -l info
+Environment=PYTHONPATH=/home/wger/src
+ExecStart=/home/wger/venv/bin/celery -A wger beat -l info
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
 Restart=always
 
 [Install]
