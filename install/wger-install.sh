@@ -51,6 +51,8 @@ tar xzf "master.tar.gz"
 mv wger-master /home/wger/src
 cd /home/wger/src || exit
 $STD pip install . --ignore-installed --break-system-packages
+$STD pip install psycopg2-binary --break-system-packages
+
 export DJANGO_SETTINGS_MODULE=settings
 export PYTHONPATH=/home/wger/src
 $STD wger create-settings --database-path /home/wger/db/database.sqlite
