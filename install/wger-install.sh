@@ -50,9 +50,8 @@ curl -fsSL "https://github.com/wger-project/wger/archive/refs/heads/master.tar.g
 tar xzf "master.tar.gz"
 mv wger-master /home/wger/src
 cd /home/wger/src || exit
-export DJANGO_SETTINGS_MODULE=settings
 $STD pip install . --ignore-installed --break-system-packages
-$STD wger create-settings --database-path /home/wger/db/database.sqlite
+$STD DJANGO_SETTINGS_MODULE=settings wger create-settings --database-path /home/wger/db/database.sqlite
 
 cat <<'EOF' >> /home/wger/src/settings.py
 
@@ -69,7 +68,7 @@ EOF
 
 sed -i "s#home/wger/src/media#home/wger/media#g" /home/wger/src/settings.py
 sed -i "/MEDIA_ROOT = '\/home\/wger\/media'/a STATIC_ROOT = '/home/wger/static'" /home/wger/src/settings.py
-$STD wger bootstrap
+$STD DJANGO_SETTINGS_MODULE=settings wger bootstrap
 $STD python3 manage.py collectstatic
 rm -rf "$temp_dir"
 # echo "${RELEASE}" >/opt/wger_version.txt
