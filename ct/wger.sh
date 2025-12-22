@@ -40,7 +40,6 @@ function update_script() {
     tar xzf "$temp_file"
     cp -rf wger-master/* /home/wger/src
     cd /home/wger/src || exit
-    $STD pip install --upgrade pip
     $STD pip install .
     $STD python3 manage.py migrate
     $STD python3 manage.py collectstatic --no-input
