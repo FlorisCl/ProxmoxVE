@@ -30,7 +30,7 @@ function update_script() {
   RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
   if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
     msg_info "Stopping Service"
-    systemctl stop wger
+    systemctl stop wger wger-celery wger-celery-beat 2>/dev/null || true
     msg_ok "Stopped Service"
 
     msg_info "Updating $APP to v${RELEASE}"
@@ -52,6 +52,7 @@ function update_script() {
 
     msg_info "Starting Service"
     systemctl start wger
+    systemctl start wger-celery wger-celery-beat 2>/dev/null || true
     msg_ok "Started Service"
     msg_ok "Updated successfully!"
   else

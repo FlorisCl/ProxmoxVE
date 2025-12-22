@@ -25,6 +25,13 @@ $STD apt install -y python3-pip
 rm -rf /usr/lib/python3.*/EXTERNALLY-MANAGED
 msg_ok "Installed Python"
 
+msg_info "Installing Redis"
+$STD apt install -y redis-server
+systemctl enable --now redis-server
+msg_ok "Installed Redis"
+
+redis-cli ping | grep -qP '^PONG$' && msg_ok "Redis is running" || msg_error "Redis is not running"
+
 NODE_VERSION="22" NODE_MODULE="yarn,sass" setup_nodejs
 
 msg_info "Setting up wger"
@@ -46,6 +53,20 @@ cd /home/wger/src || exit
 $STD pip install -r requirements_prod.txt --ignore-installed
 $STD pip install -e .
 $STD wger create-settings --database-path /home/wger/db/database.sqlite
+
+cat <<'EOF' >> /home/wger/src/settings.py
+
+#
+# Celery configuration
+#
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+EOF
+
 sed -i "s#home/wger/src/media#home/wger/media#g" /home/wger/src/settings.py
 sed -i "/MEDIA_ROOT = '\/home\/wger\/media'/a STATIC_ROOT = '/home/wger/static'" /home/wger/src/settings.py
 $STD wger bootstrap
@@ -102,6 +123,52 @@ WantedBy=multi-user.target
 EOF
 systemctl enable -q --now wger
 msg_ok "Created Service"
+
+msg_info "Creating Celery Worker Service"
+cat <<EOF >/etc/systemd/system/wger-celery.service
+[Unit]
+Description=wger Celery Worker
+After=network.target redis-server.service
+Requires=redis-server.service
+
+[Service]
+Type=simple
+User=wger
+WorkingDirectory=/home/wger/src
+Environment=DJANGO_SETTINGS_MODULE=settings
+ExecStart=/usr/bin/celery -A wger worker -l info
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now wger-celery
+msg_ok "Created Celery Worker Service"
+
+msg_info "Creating Celery Beat Service"
+cat <<EOF >/etc/systemd/system/wger-celery-beat.service
+[Unit]
+Description=wger Celery Beat
+After=network.target redis-server.service
+Requires=redis-server.service
+
+[Service]
+Type=simple
+User=wger
+WorkingDirectory=/home/wger/src
+Environment=DJANGO_SETTINGS_MODULE=settings
+ExecStart=/usr/bin/celery -A wger beat -l info
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable --now wger-celery-beat
+msg_ok "Created Celery Beat Service"
+
 
 motd_ssh
 customize
