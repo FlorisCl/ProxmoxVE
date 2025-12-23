@@ -2,6 +2,7 @@
 source <(curl -fsSL https://raw.githubusercontent.com/FlorisLava/ProxmoxVE/main/misc/build.func)
 # Copyright (c) 2021-2025 community-scripts ORG
 # Original Author: Slaviša Arežina (tremor021)
+# Revamped Script: Floris Claessens (FlorisCl)
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 # Source: https://github.com/wger-project/wger
 
