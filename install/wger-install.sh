@@ -327,12 +327,7 @@ cat <<EOF >/usr/local/bin/celery
 exec /home/wger/venv/bin/celery "\$@"
 EOF
 
-cat <<EOF >/usr/local/bin/celery-beat
-#!/usr/bin/env bash
-exec /home/wger/venv/bin/celery-beat "\$@"
-EOF
-
-chmod 755 /usr/local/bin/celery-beat
+chmod 755 /usr/local/bin/celery
 
 msg_ok "Celery helper installed (celery and celery-beat)"
 }
