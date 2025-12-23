@@ -164,11 +164,8 @@ fetch_wger_source() {
 setup_python_env() {
   msg_info "Setting up Python virtual environment"
 
-  if [ ! -d "${WGER_VENV}" ]; then
-    python3 -m venv "${WGER_VENV}" &>/dev/null
-  fi
-
-  source "${WGER_VENV}/bin/activate"
+  [ -d ${WGER_VENV} ] || python3 -m venv ${WGER_VENV} &>/dev/null
+  source ${WGER_VENV}/bin/activate
   $STD pip install -U pip setuptools wheel
 
   msg_ok "Python environment ready"
