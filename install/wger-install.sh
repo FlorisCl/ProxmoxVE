@@ -150,15 +150,17 @@ create_wger_user() {
 fetch_wger_source() {
   msg_info "Downloading wger source"
 
-  local tmp
-  tmp=$(mktemp -d)
-  cd "${tmp}" || exit
+  local temp_dir
+  temp_dir=$(mktemp -d)
+  cd "${temp_dir}" || exit
 
-  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/master.tar.gz -o wger.tar.gz
+  RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
+  curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz -o wger.tar.gz
   tar xzf wger.tar.gz
-  mv wger-master ${WGER_SRC}
+  mv wger-${RELEASE} ${WGER_SRC}
 
-  rm -rf "${tmp}"
+  rm -rf "${temp_dir}"
+  echo "${RELEASE}" >/opt/wger_version.txt
   msg_ok "Source downloaded"
 }
 

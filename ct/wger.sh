@@ -33,17 +33,36 @@ function update_script() {
   WGER_HOME="/home/wger"
   WGER_SRC="${WGER_HOME}/src"
   WGER_VENV="${WGER_HOME}/venv"
+  VERSION_FILE="/opt/${APP}_version.txt"
+
+  msg_info "Checking latest ${APP} release"
+  RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest \
+    | grep '"tag_name"' \
+    | cut -d '"' -f4)
+
+  if [[ -z "${RELEASE}" ]]; then
+    msg_error "Failed to determine latest release"
+    exit 1
+  fi
+
+  if [[ -f "${VERSION_FILE}" ]] && [[ "$(cat ${VERSION_FILE})" == "${RELEASE}" ]]; then
+    msg_ok "${APP} is already up to date (v${RELEASE})"
+    exit 0
+  fi
+
+  msg_info "Updating ${APP} to v${RELEASE}"
 
   msg_info "Stopping services"
   systemctl stop wger-celery wger-celery-beat apache2 2>/dev/null || true
   msg_ok "Services stopped"
 
-  msg_info "Updating ${APP} source"
+  msg_info "Downloading release source"
   temp_dir=$(mktemp -d)
-  # TEMP CHANGE FROM $RELEASE TO MASTER
-  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/master.tar.gz \
+
+  curl -fsSL "https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz" \
     | tar xz -C "${temp_dir}"
-  rsync -a --delete "${temp_dir}/wger-master/" "${WGER_SRC}/"
+
+  rsync -a --delete "${temp_dir}/wger-${RELEASE#v}/" "${WGER_SRC}/"
   rm -rf "${temp_dir}"
   msg_ok "Source updated"
 
@@ -61,12 +80,14 @@ function update_script() {
   "${WGER_VENV}/bin/python" manage.py collectstatic --noinput
   msg_ok "Static files collected"
 
+  echo "${RELEASE}" > "${VERSION_FILE}"
+
   msg_info "Starting services"
   systemctl start apache2
   systemctl start wger-celery wger-celery-beat
   msg_ok "Services started"
 
-  msg_ok "${APP} updated successfully!"
+  msg_ok "${APP} updated successfully to v${RELEASE}"
   exit 0
 }
 
