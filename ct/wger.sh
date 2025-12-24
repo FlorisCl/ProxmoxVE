@@ -54,16 +54,16 @@ function update_script() {
 
   msg_info "Updating Python dependencies"
   cd "${WGER_SRC}" || exit 1
-  $STD pip install -U pip setuptools wheel &>/dev/null
-  $STD pip install . &>/dev/null
+  "${WGER_VENV}/bin/pip" install -U pip setuptools wheel &>/dev/null
+  "${WGER_VENV}/bin/pip" install . &>/dev/null
   msg_ok "Dependencies updated"
 
   msg_info "Running database migrations"
-  $STD python manage.py migrate --noinput
+  "${WGER_VENV}/bin/python" manage.py migrate --noinput
   msg_ok "Database migrated"
 
   msg_info "Collecting static files"
-  $STD python manage.py collectstatic --noinput
+  "${WGER_VENV}/bin/python" manage.py collectstatic --noinput
   msg_ok "Static files collected"
 
   echo "${LATEST_COMMIT}" > "${VERSION_FILE}"

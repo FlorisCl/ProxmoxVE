@@ -42,7 +42,8 @@ install_dependencies() {
     libapache2-mod-wsgi-py3 \
     python3-venv \
     python3-pip \
-    redis-server
+    redis-server \
+    rsync
   msg_ok "System dependencies installed"
 }
 
