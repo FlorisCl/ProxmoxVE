@@ -43,9 +43,9 @@ function update_script() {
   msg_ok "Services stopped"
 
  
-  msg_info "Downloading main branch"
+  msg_info "Downloading master branch (dev mode)"
   temp_dir=$(mktemp -d)
-  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/main.tar.gz \
+  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/master.tar.gz \
     | tar xz -C "${temp_dir}"
 
   rsync -a --delete "${temp_dir}/wger-main/" "${WGER_SRC}/"
