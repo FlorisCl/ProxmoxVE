@@ -42,15 +42,11 @@ function update_script() {
   systemctl stop celery celery-beat apache2 2>/dev/null || true
   msg_ok "Services stopped"
 
-  msg_info "Downloading source from main"
+ 
+  msg_info "Downloading main branch"
   temp_dir=$(mktemp -d)
-
-  if ! curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/main.tar.gz \
-      | tar xz -C "${temp_dir}"; then
-    msg_error "Failed to download or extract source"
-    rm -rf "${temp_dir}"
-    exit 1
-  fi
+  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/main.tar.gz \
+    | tar xz -C "${temp_dir}"
 
   rsync -a --delete "${temp_dir}/wger-main/" "${WGER_SRC}/"
   rm -rf "${temp_dir}"
