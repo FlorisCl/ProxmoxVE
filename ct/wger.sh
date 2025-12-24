@@ -35,21 +35,8 @@ function update_script() {
     exit 1
   fi
 
-  msg_info "Checking latest ${APP} commit on main"
-  LATEST_COMMIT=$(git ls-remote https://github.com/wger-project/wger.git refs/heads/main | awk '{print $1}')
 
-
-  if [[ -z "${LATEST_COMMIT}" ]]; then
-    msg_error "Failed to determine latest commit"
-    exit 1
-  fi
-
-  if [[ -f "${VERSION_FILE}" ]] && [[ "$(cat ${VERSION_FILE})" == "${LATEST_COMMIT}" ]]; then
-    msg_ok "${APP} is already up to date (main @ ${LATEST_COMMIT:0:7})"
-    exit 0
-  fi
-
-  msg_info "Updating ${APP} to latest main (${LATEST_COMMIT:0:7})"
+  msg_info "Updating ${APP} to latest main"
 
   msg_info "Stopping services"
   systemctl stop celery celery-beat apache2 2>/dev/null || true
