@@ -40,8 +40,8 @@ install_dependencies() {
     git \
     apache2 \
     libapache2-mod-wsgi-py3 \
-    python3.12-venv \
-    python3.12-pip \
+    python3-venv \
+    python3-pip \
     redis-server \
     rsync
   msg_ok "System dependencies installed"
@@ -156,7 +156,8 @@ fetch_wger_source() {
   cd "${temp_dir}" || exit
 
   RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
-  curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz -o wger.tar.gz
+  # curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz -o wger.tar.gz
+  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/main.tar.gz -o wger.tar.gz
   tar xzf wger.tar.gz
   mv wger-${RELEASE} ${WGER_SRC}
 
@@ -169,7 +170,7 @@ setup_python_env() {
   msg_info "Setting up Python virtual environment"
   cd ${WGER_SRC} || EXIT
 
-  [ -d ${WGER_VENV} ] || python3.12 -m venv ${WGER_VENV} &>/dev/null
+  [ -d ${WGER_VENV} ] || python3 -m venv ${WGER_VENV} &>/dev/null
   source ${WGER_VENV}/bin/activate
   $STD pip install -U pip setuptools wheel
 
@@ -180,7 +181,7 @@ install_python_deps() {
   msg_info "Installing Python dependencies"
 
   cd "${WGER_SRC}" || exit
-  $STD pip install .
+  $STD pip install . 
   $STD pip install psycopg2-binary
 
   msg_ok "Python dependencies installed"
@@ -211,7 +212,7 @@ EOF
   sed -i "/MEDIA_ROOT = '\/home\/wger\/media'/a STATIC_ROOT = '${WGER_HOME}/static'" ${WGER_SRC}/settings.py
 
   $STD wger bootstrap
-  $STD python3.12 manage.py collectstatic
+  $STD python3 manage.py collectstatic --no-input
 
   msg_ok "wger configured"
 }
