@@ -69,6 +69,9 @@ function update_script() {
   msg_ok "Dependencies updated"
 
   msg_info "Running database migrations"
+    export DJANGO_SETTINGS_MODULE=settings
+    export PYTHONPATH="${WGER_SRC}"
+    
     "${WGER_VENV}/bin/python" manage.py migrate 
   msg_ok "Database migrated"
 
