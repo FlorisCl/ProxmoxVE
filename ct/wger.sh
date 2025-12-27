@@ -42,6 +42,9 @@ function update_script() {
   systemctl stop celery celery-beat apache2 2>/dev/null || true
   msg_ok "Services stopped"
 
+  # Create temp file for settings
+  cp "${WGER_SRC}/settings.py" /tmp/wger-settings.py 2>/dev/null || true
+
  
   msg_info "Downloading master branch"
   temp_dir=$(mktemp -d)
@@ -52,8 +55,12 @@ function update_script() {
   rm -rf "${temp_dir}"
   msg_ok "Source updated"
 
-  msg_info "Ensuring Python virtual environment exists"
+  # Restore settings from temp file
+  if [[ -f /tmp/wger-settings.py ]]; then
+    mv /tmp/wger-settings.py "${WGER_SRC}/settings.py"
+  fi
 
+  msg_info "Ensuring Python virtual environment exists"
   if [[ ! -x "${WGER_VENV}/bin/python" ]]; then
     msg_warn "Virtual environment missing or broken, recreating"
     rm -rf "${WGER_VENV}"
@@ -71,7 +78,7 @@ function update_script() {
   msg_info "Running database migrations"
     export DJANGO_SETTINGS_MODULE=settings
     export PYTHONPATH="${WGER_SRC}"
-    
+
     "${WGER_VENV}/bin/python" manage.py migrate 
   msg_ok "Database migrated"
 
