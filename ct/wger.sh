@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source <(curl -fsSL https://raw.githubusercontent.com/FlorisCl/ProxmoxVE/fix-wger-script/misc/build.func)
+source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/fix-wger-script/misc/build.func)
 # Copyright (c) 2021-2025 community-scripts ORG
 # Original Author: Slaviša Arežina (tremor021)
 # Revamped Script: Floris Claessens (FlorisCl)
@@ -35,6 +35,8 @@ function update_script() {
     exit 1
   fi
 
+  RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
+  if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
 
   msg_info "Updating ${APP} to latest main"
 
@@ -42,14 +44,14 @@ function update_script() {
   systemctl stop celery celery-beat apache2 2>/dev/null || true
   msg_ok "Services stopped"
  
-  msg_info "Downloading master branch"
+  msg_info "Downloading version ${RELEASE}"
   temp_file=$(mktemp -d)
-  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/master.tar.gz \
+  curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz \
     | tar xz -C "${temp_file}"
 
   rsync -a --delete \
     --exclude settings.py \
-    "${temp_file}/wger-master/" "${WGER_SRC}/"
+    "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
   rm -rf "${temp_file}"
   msg_ok "Source updated"
 
@@ -93,7 +95,11 @@ function update_script() {
   systemctl start celery celery-beat
   msg_ok "Services started"
 
-  msg_ok "${APP} updated successfully (main @ ${LATEST_COMMIT:0:7})"
+  echo "${RELEASE}" >/opt/${APP}_version.txt
+  msg_ok "Updated ${APP} to v${RELEASE}"
+  else 
+    msg_info "No update required. ${APP} is already at v${RELEASE}"
+  fi
   exit 0
 }
 
