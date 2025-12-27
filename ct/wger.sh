@@ -28,7 +28,6 @@ function update_script() {
   WGER_HOME="/home/wger"
   WGER_SRC="${WGER_HOME}/src"
   WGER_VENV="${WGER_HOME}/venv"
-  VERSION_FILE="/opt/${APP}_version.txt"
 
   if [[ ! -d "${WGER_HOME}" ]]; then
     msg_error "No ${APP} Installation Found!"
