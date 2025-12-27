@@ -72,13 +72,17 @@ function update_script() {
     export DJANGO_SETTINGS_MODULE=settings
     export PYTHONPATH="${WGER_SRC}"
 
-    "${WGER_VENV}/bin/python" manage.py makemigrations
-    "${WGER_VENV}/bin/python" manage.py migrate 
+    "${WGER_VENV}/bin/python" manage.py migrate --
   msg_ok "Database migrated"
 
   msg_info "Collecting static files"
    "${WGER_VENV}/bin/python" manage.py collectstatic --no-input
   msg_ok "Static files collected"
+
+  msg_info "Installing Node.js dependencies and building frontend assets"
+  npm install
+  npm run build:css:scass
+  msg_ok "Frontend assets built"
 
   msg_info "Starting services"
   systemctl start apache2
