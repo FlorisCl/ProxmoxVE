@@ -57,7 +57,7 @@ function update_script() {
   if [[ ! -x "${WGER_VENV}/bin/python" ]]; then
     msg_warn "Virtual environment missing or broken, recreating"
     rm -rf "${WGER_VENV}"
-    python3 -m venv "${WGER_VENV}"
+    $STD python3 -m venv "${WGER_VENV}"
   fi
   msg_ok "Python virtual environment ready"
 
@@ -69,20 +69,24 @@ function update_script() {
   msg_ok "Dependencies updated"
 
   msg_info "Running database migrations"
-    export DJANGO_SETTINGS_MODULE=settings
-    export PYTHONPATH="${WGER_SRC}"
-
-    "${WGER_VENV}/bin/python" manage.py migrate
+   $STD "${WGER_VENV}/bin/python" manage.py migrate --no-input
   msg_ok "Database migrated"
 
   msg_info "Collecting static files"
-   "${WGER_VENV}/bin/python" manage.py collectstatic --no-input
+   $STD "${WGER_VENV}/bin/python" manage.py collectstatic --no-input
   msg_ok "Static files collected"
 
-  msg_info "Installing Node.js dependencies and building frontend assets"
-  npm install
-  npm run build:css:sass
-  msg_ok "Frontend assets built"
+  cd "${WGER_SRC}" || exit 1
+
+
+  if command -v npm &>/dev/null && [[ -f package.json ]]; then
+    msg_info "Building frontend assets"
+    $STD npm install
+    $STD npm run build:css:sass
+    msg_ok "Frontend assets built"
+  else
+    msg_info "Skipping frontend build (npm or package.json not found)"
+  fi
 
   msg_info "Starting services"
   systemctl start apache2
