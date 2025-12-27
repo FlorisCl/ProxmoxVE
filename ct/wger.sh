@@ -43,14 +43,14 @@ function update_script() {
   msg_ok "Services stopped"
  
   msg_info "Downloading master branch"
-  temp_dir=$(mktemp -d)
+  temp_file=$(mktemp -d)
   curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/master.tar.gz \
-    | tar xz -C "${temp_dir}"
+    | tar xz -C "${temp_file}"
 
   rsync -a --delete \
     --exclude settings.py \
-    "${temp_dir}/wger-master/" "${WGER_SRC}/"
-  rm -rf "${temp_dir}"
+    "${temp_file}/wger-master/" "${WGER_SRC}/"
+  rm -rf "${temp_file}"
   msg_ok "Source updated"
 
   msg_info "Ensuring Python virtual environment exists"
@@ -65,14 +65,14 @@ function update_script() {
   
   msg_info "Updating Python dependencies"
   $STD "${WGER_VENV}/bin/python" -m pip install -U pip setuptools wheel
-  $STD "${WGER_VENV}/bin/python" -m pip install .
+  $STD "${WGER_VENV}/bin/python" -m pip install -e .
   msg_ok "Dependencies updated"
 
   msg_info "Running database migrations"
     export DJANGO_SETTINGS_MODULE=settings
     export PYTHONPATH="${WGER_SRC}"
 
-    "${WGER_VENV}/bin/python" manage.py migrate --
+    "${WGER_VENV}/bin/python" manage.py migrate
   msg_ok "Database migrated"
 
   msg_info "Collecting static files"
@@ -81,7 +81,7 @@ function update_script() {
 
   msg_info "Installing Node.js dependencies and building frontend assets"
   npm install
-  npm run build:css:scass
+  npm run build:css:sass
   msg_ok "Frontend assets built"
 
   msg_info "Starting services"
