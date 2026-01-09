@@ -20,6 +20,7 @@ update_os
 WGER_USER="wger"
 WGER_HOME="/home/wger"
 WGER_SRC="${WGER_HOME}/src"
+WGER_SETTINGS="${WGER_SRC}/settings"
 WGER_VENV="${WGER_HOME}/venv"
 WGER_DB="${WGER_HOME}/db"
 WGER_PORT="${WGER_PORT:-3000}"
@@ -155,10 +156,16 @@ fetch_wger_source() {
   temp_dir=$(mktemp -d)
   cd "${temp_dir}" || exit
 
+
   RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
-  curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz -o ${RELEASE}.tar.gz
-  tar xzf ${RELEASE}.tar.gz
-  mv wger-${RELEASE} ${WGER_SRC}
+  # curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz -o ${RELEASE}.tar.gz
+  # tar xzf ${RELEASE}.tar.gz
+  # mv wger-${RELEASE} ${WGER_SRC}
+
+  #Get refactor-settings branch
+  curl -fsSL https://github.com/wger-project/wger/archive/refs/branch/refactor-settings.tar.gz -o refactor-settings.tar.gz
+  tar xzf refactor-settings.tar.gz
+  mv wger-refactor-settings ${WGER_SRC}
 
   rm -rf "${temp_dir}"
   echo "${RELEASE}" >/opt/wger_version.txt
@@ -189,26 +196,8 @@ install_python_deps() {
 configure_wger() {
   msg_info "Configuring wger application"
 
-  export DJANGO_SETTINGS_MODULE=settings
+  export DJANGO_SETTINGS_MODULE=settings.main
   export PYTHONPATH=${WGER_SRC}
-
-  $STD wger create-settings --database-path ${WGER_DB}/database.sqlite
-
-  if grep -q "CELERY_BROKER_URL" ${WGER_SRC}/settings.py; then
-    sed -i 's|# CELERY_BROKER_URL|CELERY_BROKER_URL|' "${WGER_SRC}/settings.py"
-    sed -i 's|# CELERY_RESULT_BACKEND|CELERY_RESULT_BACKEND|' "${WGER_SRC}/settings.py"
-  else 
-     # Append lines if not present
-    cat <<'EOF' >> "${WGER_SRC}/settings.py"
-
-    # Celery configuration
-    CELERY_BROKER_URL = "redis://localhost:6379/2"
-    CELERY_RESULT_BACKEND = "redis://localhost:6379/2"
-EOF
-  fi
-
-  sed -i "s#home/wger/src/media#home/wger/media#g" ${WGER_SRC}/settings.py
-  sed -i "/MEDIA_ROOT = '\/home\/wger\/media'/a STATIC_ROOT = '${WGER_HOME}/static'" ${WGER_SRC}/settings.py
 
   $STD wger bootstrap
   $STD python3 manage.py collectstatic --no-input
@@ -254,7 +243,7 @@ Type=simple
 User=${WGER_USER}
 Group=${WGER_USER}
 WorkingDirectory=${WGER_SRC}
-Environment=DJANGO_SETTINGS_MODULE=settings
+Environment=DJANGO_SETTINGS_MODULE=settings.main
 Environment=PYTHONPATH=${WGER_SRC}
 Environment=PYTHONUNBUFFERED=1
 ExecStart=${WGER_VENV}/bin/celery -A wger worker -l info
@@ -294,7 +283,7 @@ Type=simple
 User=${WGER_USER}
 Group=${WGER_USER}
 WorkingDirectory=${WGER_SRC}
-Environment=DJANGO_SETTINGS_MODULE=settings
+Environment=DJANGO_SETTINGS_MODULE=settings.main
 Environment=PYTHONPATH=${WGER_SRC}
 Environment=PYTHONUNBUFFERED=1
 ExecStart=${WGER_VENV}/bin/celery -A wger beat -l info --schedule /var/lib/wger/celery/celerybeat-schedule
