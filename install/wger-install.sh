@@ -251,7 +251,7 @@ Restart=always
 PrivateTmp=true
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=${WGER_HOME}
+ReadWritePaths=${WGER_HOME} 
 
 [Install]
 WantedBy=multi-user.target
@@ -291,7 +291,7 @@ Restart=always
 PrivateTmp=true
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=${WGER_HOME}
+ReadWritePaths=${WGER_HOME} /var/lib/wger
 
 [Install]
 WantedBy=multi-user.target
