@@ -246,6 +246,9 @@ WorkingDirectory=${WGER_SRC}
 Environment=DJANGO_SETTINGS_MODULE=settings.main
 Environment=PYTHONPATH=${WGER_SRC}
 Environment=PYTHONUNBUFFERED=1
+Environment=USE_CELERY=True
+Environment=CELERY_BROKER=redis://localhost:6379/2
+Environment=CELERY_BACKEND=redis://localhost:6379/2
 ExecStart=${WGER_VENV}/bin/celery -A wger worker -l info
 Restart=always
 PrivateTmp=true
@@ -285,6 +288,9 @@ Group=${WGER_USER}
 WorkingDirectory=${WGER_SRC}
 Environment=DJANGO_SETTINGS_MODULE=settings.main
 Environment=PYTHONPATH=${WGER_SRC}
+Environment=USE_CELERY=True
+Environment=CELERY_BROKER=redis://localhost:6379/2
+Environment=CELERY_BACKEND=redis://localhost:6379/2
 Environment=PYTHONUNBUFFERED=1
 ExecStart=${WGER_VENV}/bin/celery -A wger beat -l info --schedule /var/lib/wger/celery/celerybeat-schedule
 Restart=always
