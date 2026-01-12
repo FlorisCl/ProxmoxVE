@@ -205,6 +205,22 @@ configure_wger() {
   msg_ok "wger configured"
 }
 
+create_env_file() {
+  msg_info "Creating wger .env configuration"
+
+  cat <<EOF > ${WGER_SRC}/.env
+# Local installation overrides
+CELERY_BROKER=redis://localhost:6379/2
+CELERY_BACKEND=redis://localhost:6379/2
+EOF
+
+  chown ${WGER_USER}:${WGER_USER} ${WGER_SRC}/.env
+  chmod 600 ${WGER_SETTINGS}/.env
+
+  msg_ok ".env file created"
+}
+
+
 # --------------------------------------------------
 # Services
 # --------------------------------------------------
@@ -355,6 +371,7 @@ fetch_wger_source
 setup_python_env
 install_python_deps
 configure_wger
+create_env_file
 
 section "Services"
 setup_dummy_service
