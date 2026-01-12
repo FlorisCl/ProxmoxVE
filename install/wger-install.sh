@@ -215,7 +215,7 @@ CELERY_BACKEND=redis://localhost:6379/2
 EOF
 
   chown ${WGER_USER}:${WGER_USER} ${WGER_SRC}/.env
-  chmod 600 ${WGER_SETTINGS}/.env
+  chmod 600 ${WGER_SRC}/.env
 
   msg_ok ".env file created"
 }
@@ -370,8 +370,8 @@ create_wger_user
 fetch_wger_source
 setup_python_env
 install_python_deps
-configure_wger
 create_env_file
+configure_wger
 
 section "Services"
 setup_dummy_service
