@@ -163,9 +163,9 @@ fetch_wger_source() {
   # mv wger-${RELEASE} ${WGER_SRC}
 
   # Get refactor-settings branch
-  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/feature/refactor-settings.tar.gz -o refactor-settings.tar.gz
-  tar xzf refactor-settings.tar.gz
-  mv wger-feature-refactor-settings ${WGER_SRC}
+  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/master.tar.gz -o master.tar.gz
+  tar xzf master.tar.gz
+  mv wger-master ${WGER_SRC}
 
   rm -rf "${temp_dir}"
   echo "${RELEASE}" >/opt/wger_version.txt
