@@ -49,7 +49,6 @@ function update_script() {
     | tar xz -C "${temp_file}"
 
   rsync -a --delete \
-    --exclude settings.py \
     "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
   rm -rf "${temp_file}"
   msg_ok "Source updated"

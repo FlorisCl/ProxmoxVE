@@ -205,22 +205,6 @@ configure_wger() {
   msg_ok "wger configured"
 }
 
-create_env_file() {
-  msg_info "Creating wger .env configuration"
-
-  cat <<EOF > ${WGER_SRC}/.env
-# Local installation overrides
-CELERY_BROKER=redis://localhost:6379/2
-CELERY_BACKEND=redis://localhost:6379/2
-EOF
-
-  chown ${WGER_USER}:${WGER_USER} ${WGER_SRC}/.env
-  chmod 600 ${WGER_SRC}/.env
-
-  msg_ok ".env file created"
-}
-
-
 # --------------------------------------------------
 # Services
 # --------------------------------------------------
@@ -344,6 +328,11 @@ msg_info "Installing Celery helper command"
 
 cat <<EOF >/usr/local/bin/celery
 #!/usr/bin/env bash
+export DJANGO_SETTINGS_MODULE=settings.main 
+export PYTHONPATH=/home/wger/src 
+export CELERY_BROKER=redis://localhost:6379/2 
+export CELERY_BACKEND=redis://localhost:6379/2
+
 exec /home/wger/venv/bin/celery "\$@"
 EOF
 
@@ -370,7 +359,6 @@ create_wger_user
 fetch_wger_source
 setup_python_env
 install_python_deps
-create_env_file
 configure_wger
 
 section "Services"
