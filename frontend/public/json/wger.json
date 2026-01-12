@@ -33,7 +33,7 @@
   },
   "notes": [
     {
-      "text": "This LXC also runs Celery and Redis to synchronize workouts and ",
+      "text": "This LXC also runs Celery and Redis to synchronize workouts and ingredients",
       "type": "info"
     }
   ]
