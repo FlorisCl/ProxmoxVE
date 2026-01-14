@@ -44,15 +44,17 @@ function update_script() {
   msg_ok "Services stopped"
  
   msg_info "Downloading version ${RELEASE}"
-    temp_file=$(mktemp -d)
-    curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/master.tar.gz \
-      | tar xzf - -C "${temp_file}"
+
+  temp_file=$(mktemp -d)
+  
+  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/master.tar.gz \
+    | tar xzf - -C "${temp_file}"
   # curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz \
     # | tar xz -C "${temp_file}"
 
-    rsync -a --delete \
-      "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
-    rm -rf "${temp_file}"
+  rsync -a --delete \
+    "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
+  rm -rf "${temp_file}"
   msg_ok "Source updated"
 
   msg_info "Ensuring Python virtual environment exists"
