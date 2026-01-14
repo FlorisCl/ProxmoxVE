@@ -50,8 +50,7 @@ function update_script() {
     | tar xz -C "${temp_file}"
 
   rsync -a --delete \
-    "${temp_file}/wger-main/" "${WGER_SRC}/"
-    # "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
+    "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
   rm -rf "${temp_file}"
   msg_ok "Source updated"
 
