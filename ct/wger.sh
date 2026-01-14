@@ -35,7 +35,7 @@ function update_script() {
   fi
 
   RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
-  if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
+  # if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
 
   msg_info "Updating ${APP} to latest main"
 
@@ -95,9 +95,9 @@ function update_script() {
 
   echo "${RELEASE}" >/opt/${APP}_version.txt
   msg_ok "Updated ${APP} to v${RELEASE}"
-  else 
-    msg_info "No update required. ${APP} is already at v${RELEASE}"
-  fi
+  # else 
+  #   msg_info "No update required. ${APP} is already at v${RELEASE}"
+  # fi
   exit 0
 }
 
