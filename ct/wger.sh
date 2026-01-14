@@ -35,7 +35,7 @@ function update_script() {
   fi
 
   RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
-  # if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
+  if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
 
   msg_info "Updating ${APP} to latest main"
 
@@ -46,16 +46,12 @@ function update_script() {
   msg_info "Downloading version ${RELEASE}"
 
   temp_file=$(mktemp -d)
-  
-  curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/master.tar.gz \
-    | tar xzf - -C "${temp_file}"
-  # curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz \
-    # | tar xz -C "${temp_file}"
 
-  # rsync -a --delete \
-    # "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
+  curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz \
+    | tar xz -C "${temp_file}"
+
   rsync -a --delete \
-    "${temp_file}/wger-master/" "${WGER_SRC}/"
+    "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
   rm -rf "${temp_file}"
   msg_ok "Source updated"
 
@@ -105,9 +101,9 @@ function update_script() {
 
   echo "${RELEASE}" >/opt/${APP}_version.txt
   msg_ok "Updated ${APP} to v${RELEASE}"
-  # else 
-  #   msg_info "No update required. ${APP} is already at v${RELEASE}"
-  # fi
+  else 
+    msg_info "No update required. ${APP} is already at v${RELEASE}"
+  fi
   exit 0
 }
 
