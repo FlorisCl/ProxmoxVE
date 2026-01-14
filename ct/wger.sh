@@ -63,6 +63,10 @@ function update_script() {
 
   cd "${WGER_SRC}" || exit
   
+  export DJANGO_SETTINGS_MODULE=settings.main
+  export PYTHONPATH="${WGER_SRC}"
+  export USE_CELERY=True
+  
   msg_info "Updating Python dependencies"
   $STD "${WGER_VENV}/bin/python" -m pip install -U pip setuptools wheel
   $STD "${WGER_VENV}/bin/python" -m pip install -e .
