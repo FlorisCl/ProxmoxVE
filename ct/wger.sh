@@ -52,8 +52,10 @@ function update_script() {
   # curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz \
     # | tar xz -C "${temp_file}"
 
+  # rsync -a --delete \
+    # "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
   rsync -a --delete \
-    "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
+    "${temp_file}/wger-master/" "${WGER_SRC}/"
   rm -rf "${temp_file}"
   msg_ok "Source updated"
 
