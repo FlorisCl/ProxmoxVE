@@ -45,11 +45,13 @@ function update_script() {
  
   msg_info "Downloading version ${RELEASE}"
   temp_file=$(mktemp -d)
-  curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz \
+  # curl -fsSL https://github.com/wger-project/wger/archive/refs/tags/${RELEASE}.tar.gz \
+    curl -fsSL https://github.com/wger-project/wger/archive/refs/heads/main.tar.gz \
     | tar xz -C "${temp_file}"
 
   rsync -a --delete \
-    "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
+    "${temp_file}/wger-main/" "${WGER_SRC}/"
+    # "${temp_file}/wger-${RELEASE}/" "${WGER_SRC}/"
   rm -rf "${temp_file}"
   msg_ok "Source updated"
 
