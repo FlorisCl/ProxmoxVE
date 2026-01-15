@@ -37,21 +37,7 @@ function update_script() {
   RELEASE=$(curl -fsSL https://api.github.com/repos/wger-project/wger/releases/latest | grep "tag_name" | awk '{print substr($2, 2, length($2)-3)}')
   if [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]] || [[ ! -f /opt/${APP}_version.txt ]]; then
 
-    msg_info "Updating $APP to v${RELEASE}"
-    temp_file=$(mktemp)
-    curl -fsSL "https://github.com/wger-project/wger/archive/refs/tags/$RELEASE.tar.gz" -o "$temp_file"
-    tar xzf "$temp_file"
-    cp -rf wger-"$RELEASE"/* /home/wger/src
-    cd /home/wger/src
-    $STD pip install -r requirements_prod.txt --ignore-installed
-    $STD pip install -e .
-    $STD python3 manage.py migrate
-    $STD python3 manage.py collectstatic --no-input
-    $STD yarn install
-    $STD yarn build:css:sass
-    rm -rf "$temp_file"
-    echo "${RELEASE}" >/opt/${APP}_version.txt
-    msg_ok "Updated $APP to v${RELEASE}"
+  msg_info "Updating $APP to v${RELEASE}"
 
   msg_info "Stopping services"
   systemctl stop celery celery-beat apache2 2>/dev/null || true
