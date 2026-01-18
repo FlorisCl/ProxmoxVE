@@ -50,8 +50,8 @@ msg_info "Setting up wger"
   export PYTHONPATH=/opt/wger
   export DJANGO_DB_DATABASE=/opt/wger/db/database.sqlite
 
-  /opt/wger/.venv/bin/wger bootstrap
-  /opt/wger/.venv/bin/python manage.py collectstatic --no-input
+  $STD /opt/wger/.venv/bin/wger bootstrap
+  $STD /opt/wger/.venv/bin/python manage.py collectstatic --no-input
 
 
 
@@ -141,7 +141,6 @@ msg_ok "Celery service created"
 
 msg_info "Creating Celery beat service"
   mkdir -p /var/lib/wger/celery
-  chown -R wger:wger /var/lib/wger
   chmod 755 /var/lib/wger
   chmod 700 /var/lib/wger/celery
   msg_ok "Celery Beat schedule directory ready"
