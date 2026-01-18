@@ -44,6 +44,8 @@ msg_info "Setting up wger"
   chown -R wger:wger /opt/wger/media
   chmod 755 /opt/wger/media
 
+  chown -R wger:wger /opt/wger
+  chmod 755 /opt/wger
 
   cd /opt/wger
   $STD uv venv
@@ -53,8 +55,8 @@ msg_info "Setting up wger"
   export DJANGO_SETTINGS_MODULE=settings.main
   export PYTHONPATH=/opt/wger
 
-  $STD /opt/wger/.venv/bin/wger bootstrap
-  $STD /opt/wger/.venv/bin/python manage.py collectstatic --no-input
+  $STD -u wger -E /opt/wger/.venv/bin/wger bootstrap
+  $STD -u wger -E /opt/wger/.venv/bin/python manage.py collectstatic --no-input
 msg_ok "Finished setting up wger"
 
 msg_info "Creating wger service"
