@@ -19,21 +19,19 @@ msg_info "Installing Dependencies"
     apache2 \
     libapache2-mod-wsgi-py3 \
     redis-server \
-    rsync \
-    python3-pip
+    rsync
 msg_ok "Installed Dependencies"
 
 PYTHON_VERSION="3.13" setup_uv
 NODE_VERSION="22" NODE_MODULE="npm,sass" setup_nodejs
 corepack enable
-corepack prepare npm --activate
+# corepack prepare npm --activate
 # corepack disable yarn pnpm
 systemctl enable --now redis-server
 
 fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
 
 msg_info "Setting up wger"
-  $STD adduser wger --disabled-password --gecos ""
   mkdir /home/wger/db touch /home/wger/db/database.sqlite
   chown :www-data -R /home/wger/db
   chmod g+w /home/wger/db /home/wger/db/database.sqlite
@@ -45,8 +43,8 @@ msg_info "Setting up wger"
 
   export DJANGO_SETTINGS_MODULE=settings.main
   export PYTHONPATH=/home/wger/src
-  $STD wger bootstrap
-  $STD python3 manage.py collectstatic --no-input
+  $STD /home/wger/src/.venv/bin/wger bootstrap
+  $STD /home/wger/src/.venv/bin/python manage.py collectstatic --no-input
 msg_ok "Finished setting up wger"
 
 msg_info "Creating wger service"
@@ -59,7 +57,7 @@ cat <<EOF >/etc/apache2/sites-available/wger.conf
 
 <VirtualHost *:80>
   WSGIApplicationGroup %{GLOBAL}
-  WSGIDaemonProcess wger python-path=/home/wger/src python-home=/home/wger
+  WSGIDaemonProcess wger python-path=/home/wger/src python-home=/home/wger/src/.venv
   WSGIProcessGroup wger
   WSGIScriptAlias / /home/wger/src/wger/wsgi.py
   WSGIPassAuthorization On
