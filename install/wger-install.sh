@@ -29,6 +29,8 @@ corepack enable
 # corepack disable yarn pnpm
 systemctl enable --now redis-server
 
+fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
+
 msg_info "Setting up wger"
   adduser wger --disabled-password --gecos ""
 
@@ -39,10 +41,9 @@ msg_info "Setting up wger"
   chmod g+w /opt/wger/db /opt/wger/db/database.sqlite
   chmod o+w /opt/wger/media
 
-  fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
-
   cd /opt/wger
   $STD uv sync
+  $STD /opt/wger/.venv/bin/pip install psycopg2-binary
 
   export DJANGO_SETTINGS_MODULE=settings.main
   export PYTHONPATH=/opt/wger
