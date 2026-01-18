@@ -32,28 +32,28 @@ systemctl enable --now redis-server
 msg_info "Setting up wger"
   adduser wger --disabled-password --gecos ""
 
-  mkdir -p /home/wger/db /home/wger/{static,media}
-  touch /home/wger/db/database.sqlite
+  mkdir -p /opt/wger/db /opt/wger/{static,media}
+  touch /opt/wger/db/database.sqlite
 
-  chown :www-data -R /home/wger/db
-  chmod g+w /home/wger/db /home/wger/db/database.sqlite
-  chmod o+w /home/wger/media
+  chown :www-data -R /opt/wger/db
+  chmod g+w /opt/wger/db /opt/wger/db/database.sqlite
+  chmod o+w /opt/wger/media
 
   fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
 
-  cd /home/wger/src
+  cd /opt/wger/src
   $STD uv sync
 
   export DJANGO_SETTINGS_MODULE=settings.main
-  export PYTHONPATH=/home/wger/src
+  export PYTHONPATH=/opt/wger/src
 
-  $STD /home/wger/src/.venv/bin/wger bootstrap
-  $STD /home/wger/src/.venv/bin/python manage.py collectstatic --no-input
+  $STD /opt/wger/src/.venv/bin/wger bootstrap
+  $STD /opt/wger/src/.venv/bin/python manage.py collectstatic --no-input
 msg_ok "Finished setting up wger"
 
 msg_info "Creating wger service"
 cat <<EOF >/etc/apache2/sites-available/wger.conf
-<Directory /home/wger/src>
+<Directory /opt/wger/src>
   <Files wsgi.py>
     Require all granted
   </Files>
@@ -61,18 +61,18 @@ cat <<EOF >/etc/apache2/sites-available/wger.conf
 
 <VirtualHost *:80>
   WSGIApplicationGroup %{GLOBAL}
-  WSGIDaemonProcess wger python-path=/home/wger/src python-home=/home/wger/src/.venv
+  WSGIDaemonProcess wger python-path=/opt/wger/src python-home=/opt/wger/src/.venv
   WSGIProcessGroup wger
-  WSGIScriptAlias / /home/wger/src/wger/wsgi.py
+  WSGIScriptAlias / /opt/wger/src/wger/wsgi.py
   WSGIPassAuthorization On
 
-  Alias /static/ /home/wger/static/
-  <Directory /home/wger/static>
+  Alias /static/ /opt/wger/static/
+  <Directory /opt/wger/static>
     Require all granted
   </Directory>
 
-  Alias /media/ /home/wger/media/
-  <Directory /home/wger/media>
+  Alias /media/ /opt/wger/media/
+  <Directory /opt/wger/media>
     Require all granted
   </Directory>
 
@@ -93,7 +93,7 @@ After=network.target
 [Service]
 Type=simple
 User=wger
-ExecStart=/home/wger/src/.venv/bin/wger start -a 0.0.0.0 -p 3000
+ExecStart=/opt/wger/src/.venv/bin/wger start -a 0.0.0.0 -p 3000
 Restart=always
 
 [Install]
@@ -112,19 +112,19 @@ Requires=redis-server.service
 [Service]
 Type=simple
 User=wger
-WorkingDirectory=/home/wger/src
+WorkingDirectory=/opt/wger/src
 Environment=DJANGO_SETTINGS_MODULE=settings.main
-Environment=PYTHONPATH=/home/wger/src
+Environment=PYTHONPATH=/opt/wger/src
 Environment=PYTHONUNBUFFERED=1
 Environment=USE_CELERY=True
 Environment=CELERY_BROKER=redis://localhost:6379/2
 Environment=CELERY_BACKEND=redis://localhost:6379/2
-ExecStart=/home/wger/src/.venv/bin/celery -A wger worker -l info
+ExecStart=/opt/wger/src/.venv/bin/celery -A wger worker -l info
 Restart=always
 PrivateTmp=true
 NoNewPrivileges=true
 ProtectSystem=strict
-ReadWritePaths=/home/wger
+ReadWritePaths=/opt/wger
 
 [Install]
 WantedBy=multi-user.target
@@ -149,19 +149,19 @@ msg_info "Creating Celery beat service"
   [Service]
   Type=simple
   User=wger
-  WorkingDirectory=/home/wger/src
+  WorkingDirectory=/opt/wger/src
   Environment=DJANGO_SETTINGS_MODULE=settings.main
-  Environment=PYTHONPATH=/home/wger/src
+  Environment=PYTHONPATH=/opt/wger/src
   Environment=USE_CELERY=True
   Environment=CELERY_BROKER=redis://localhost:6379/2
   Environment=CELERY_BACKEND=redis://localhost:6379/2
   Environment=PYTHONUNBUFFERED=1
-  ExecStart=/home/wger/src/.venv/bin/celery -A wger beat -l info --schedule /var/lib/wger/celery/celerybeat-schedule
+  ExecStart=/opt/wger/src/.venv/bin/celery -A wger beat -l info --schedule /var/lib/wger/celery/celerybeat-schedule
   Restart=always
   PrivateTmp=true
   NoNewPrivileges=true
   ProtectSystem=strict
-  ReadWritePaths=/home/wger /var/lib/wger
+  ReadWritePaths=/opt/wger /var/lib/wger
 
   [Install]
   WantedBy=multi-user.target
