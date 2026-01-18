@@ -26,8 +26,8 @@ msg_ok "Installed Dependencies"
 PYTHON_VERSION="3.13" setup_uv
 NODE_VERSION="22" NODE_MODULE="npm,sass" setup_nodejs
 corepack enable
-corepack prepare npm --activate corepack
-disable yarn pnpm
+corepack prepare npm --activate
+# corepack disable yarn pnpm
 systemctl enable --now redis-server
 
 fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
