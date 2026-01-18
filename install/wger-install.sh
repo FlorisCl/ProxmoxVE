@@ -29,19 +29,17 @@ corepack enable
 # corepack disable yarn pnpm
 systemctl enable --now redis-server
 
-fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
-
 msg_info "Setting up wger"
   adduser wger --disabled-password --gecos ""
 
-  mkdir /home/wger/db
+  mkdir -p /home/wger/db /home/wger/{static,media}
   touch /home/wger/db/database.sqlite
 
   chown :www-data -R /home/wger/db
   chmod g+w /home/wger/db /home/wger/db/database.sqlite
-
-  mkdir /home/wger/{static,media}
   chmod o+w /home/wger/media
+
+  fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
 
   cd /home/wger/src
   $STD uv sync
