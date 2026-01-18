@@ -41,19 +41,19 @@ msg_info "Setting up wger"
 
   fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
 
-  cd /opt/wger/src
+  cd /opt/wger
   $STD uv sync
 
   export DJANGO_SETTINGS_MODULE=settings.main
-  export PYTHONPATH=/opt/wger/src
+  export PYTHONPATH=/opt/wger
 
-  $STD /opt/wger/src/.venv/bin/wger bootstrap
-  $STD /opt/wger/src/.venv/bin/python manage.py collectstatic --no-input
+  $STD /opt/wger/.venv/bin/wger bootstrap
+  $STD /opt/wger/.venv/bin/python manage.py collectstatic --no-input
 msg_ok "Finished setting up wger"
 
 msg_info "Creating wger service"
 cat <<EOF >/etc/apache2/sites-available/wger.conf
-<Directory /opt/wger/src>
+<Directory /opt/wger>
   <Files wsgi.py>
     Require all granted
   </Files>
@@ -61,9 +61,9 @@ cat <<EOF >/etc/apache2/sites-available/wger.conf
 
 <VirtualHost *:80>
   WSGIApplicationGroup %{GLOBAL}
-  WSGIDaemonProcess wger python-path=/opt/wger/src python-home=/opt/wger/src/.venv
+  WSGIDaemonProcess wger python-path=/opt/wger python-home=/opt/wger/.venv
   WSGIProcessGroup wger
-  WSGIScriptAlias / /opt/wger/src/wger/wsgi.py
+  WSGIScriptAlias / /opt/wger/wger/wsgi.py
   WSGIPassAuthorization On
 
   Alias /static/ /opt/wger/static/
@@ -93,7 +93,7 @@ After=network.target
 [Service]
 Type=simple
 User=wger
-ExecStart=/opt/wger/src/.venv/bin/wger start -a 0.0.0.0 -p 3000
+ExecStart=/opt/wger/.venv/bin/wger start -a 0.0.0.0 -p 3000
 Restart=always
 
 [Install]
@@ -112,14 +112,14 @@ Requires=redis-server.service
 [Service]
 Type=simple
 User=wger
-WorkingDirectory=/opt/wger/src
+WorkingDirectory=/opt/wger
 Environment=DJANGO_SETTINGS_MODULE=settings.main
-Environment=PYTHONPATH=/opt/wger/src
+Environment=PYTHONPATH=/opt/wger
 Environment=PYTHONUNBUFFERED=1
 Environment=USE_CELERY=True
 Environment=CELERY_BROKER=redis://localhost:6379/2
 Environment=CELERY_BACKEND=redis://localhost:6379/2
-ExecStart=/opt/wger/src/.venv/bin/celery -A wger worker -l info
+ExecStart=/opt/wger/.venv/bin/celery -A wger worker -l info
 Restart=always
 PrivateTmp=true
 NoNewPrivileges=true
@@ -149,14 +149,14 @@ msg_info "Creating Celery beat service"
   [Service]
   Type=simple
   User=wger
-  WorkingDirectory=/opt/wger/src
+  WorkingDirectory=/opt/wger
   Environment=DJANGO_SETTINGS_MODULE=settings.main
-  Environment=PYTHONPATH=/opt/wger/src
+  Environment=PYTHONPATH=/opt/wger
   Environment=USE_CELERY=True
   Environment=CELERY_BROKER=redis://localhost:6379/2
   Environment=CELERY_BACKEND=redis://localhost:6379/2
   Environment=PYTHONUNBUFFERED=1
-  ExecStart=/opt/wger/src/.venv/bin/celery -A wger beat -l info --schedule /var/lib/wger/celery/celerybeat-schedule
+  ExecStart=/opt/wger/.venv/bin/celery -A wger beat -l info --schedule /var/lib/wger/celery/celerybeat-schedule
   Restart=always
   PrivateTmp=true
   NoNewPrivileges=true
