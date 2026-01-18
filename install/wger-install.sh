@@ -37,9 +37,13 @@ msg_info "Setting up wger"
   mkdir -p /opt/wger/db /opt/wger/{static,media}
   touch /opt/wger/db/database.sqlite
 
-  chown :www-data -R /opt/wger/db
-  chmod g+w /opt/wger/db /opt/wger/db/database.sqlite
-  chmod o+w /opt/wger/media
+  chown -R wger:wger /opt/wger/db
+  chmod 700 /opt/wger/db
+  chmod 600 /opt/wger/db/database.sqlite
+
+  chown -R wger:wger /opt/wger/media
+  chmod 755 /opt/wger/media
+
 
   cd /opt/wger
   $STD uv venv
