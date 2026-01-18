@@ -42,8 +42,9 @@ msg_info "Setting up wger"
   chmod o+w /opt/wger/media
 
   cd /opt/wger
+  $STD uv venv
   $STD uv sync
-  $STD /opt/wger/.venv/bin/pip install psycopg2-binary
+  $STD uv pip install psycopg2-binary
 
   export DJANGO_SETTINGS_MODULE=settings.main
   export PYTHONPATH=/opt/wger
