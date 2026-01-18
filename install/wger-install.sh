@@ -32,20 +32,14 @@ systemctl enable --now redis-server
 fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
 
 msg_info "Setting up wger"
-  adduser wger --disabled-password --gecos ""
-
   mkdir -p /opt/wger/{static,media}
 
+  chmod 755 /opt/wger
+
   touch /opt/wger/db.sqlite3
-  chown wger:wger /opt/wger/db.sqlite3
   chmod 600 /opt/wger/db.sqlite3
 
-
-  chown -R wger:wger /opt/wger/media
   chmod 755 /opt/wger/media
-
-  chown -R wger:wger /opt/wger
-  chmod 755 /opt/wger
 
   cd /opt/wger
   $STD uv venv
@@ -55,12 +49,11 @@ msg_info "Setting up wger"
   export DJANGO_SETTINGS_MODULE=settings.main
   export PYTHONPATH=/opt/wger
 
-  sudo -u wger \
-  DJANGO_SETTINGS_MODULE=settings.main \
-  PYTHONPATH=/opt/wger \
   /opt/wger/.venv/bin/wger bootstrap
+  /opt/wger/.venv/bin/python manage.py collectstatic --no-input
 
-  $STD /opt/wger/.venv/bin/python manage.py collectstatic --no-input
+
+
 msg_ok "Finished setting up wger"
 
 msg_info "Creating wger service"
@@ -104,7 +97,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=wger
+User=root
 ExecStart=/opt/wger/.venv/bin/wger start -a 0.0.0.0 -p 3000
 Restart=always
 
@@ -123,7 +116,7 @@ Requires=redis-server.service
 
 [Service]
 Type=simple
-User=wger
+User=root
 WorkingDirectory=/opt/wger
 Environment=DJANGO_SETTINGS_MODULE=settings.main
 Environment=PYTHONPATH=/opt/wger
@@ -160,7 +153,7 @@ msg_info "Creating Celery beat service"
 
   [Service]
   Type=simple
-  User=wger
+  User=root
   WorkingDirectory=/opt/wger
   Environment=DJANGO_SETTINGS_MODULE=settings.main
   Environment=PYTHONPATH=/opt/wger
