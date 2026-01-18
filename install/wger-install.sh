@@ -34,12 +34,12 @@ fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
 msg_info "Setting up wger"
   adduser wger --disabled-password --gecos ""
 
-  mkdir -p /opt/wger/db /opt/wger/{static,media}
-  touch /opt/wger/db/database.sqlite
+  mkdir -p /opt/wger/{static,media}
 
-  chown -R wger:wger /opt/wger/db
-  chmod 700 /opt/wger/db
-  chmod 600 /opt/wger/db/database.sqlite
+  touch /opt/wger/db.sqlite3
+  chown wger:wger /opt/wger/db.sqlite3
+  chmod 600 /opt/wger/db.sqlite3
+
 
   chown -R wger:wger /opt/wger/media
   chmod 755 /opt/wger/media
@@ -55,7 +55,11 @@ msg_info "Setting up wger"
   export DJANGO_SETTINGS_MODULE=settings.main
   export PYTHONPATH=/opt/wger
 
-  $STD /opt/wger/.venv/bin/wger bootstrap
+  sudo -u wger \
+  DJANGO_SETTINGS_MODULE=settings.main \
+  PYTHONPATH=/opt/wger \
+  /opt/wger/.venv/bin/wger bootstrap
+
   $STD /opt/wger/.venv/bin/python manage.py collectstatic --no-input
 msg_ok "Finished setting up wger"
 
