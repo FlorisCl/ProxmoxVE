@@ -36,8 +36,8 @@ msg_info "Setting up wger"
 
   chmod 755 /opt/wger
 
-  touch /opt/wger/db.sqlite3
-  chmod 600 /opt/wger/db.sqlite3
+  mkdir -p /opt/wger/db
+  chmod 755 /opt/wger/db
 
   chmod 755 /opt/wger/media
 
@@ -48,6 +48,7 @@ msg_info "Setting up wger"
 
   export DJANGO_SETTINGS_MODULE=settings.main
   export PYTHONPATH=/opt/wger
+  export DJANGO_DB_DATABASE=/opt/wger/db/database.sqlite
 
   /opt/wger/.venv/bin/wger bootstrap
   /opt/wger/.venv/bin/python manage.py collectstatic --no-input
