@@ -25,8 +25,7 @@ msg_ok "Installed Dependencies"
 PYTHON_VERSION="3.13" setup_uv
 NODE_VERSION="22" NODE_MODULE="npm,sass" setup_nodejs
 corepack enable
-# corepack prepare npm --activate
-# corepack disable yarn pnpm
+
 systemctl enable --now redis-server
 
 fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
@@ -56,6 +55,19 @@ msg_info "Setting up wger"
 
 
 msg_ok "Finished setting up wger"
+
+msg_info "Creating env variables"
+  cat <<EOF >/opt/wger/wger.env
+  DJANGO_SETTINGS_MODULE=settings.main
+  PYTHONPATH=/opt/wger
+  DJANGO_DB_DATABASE=/opt/wger/db/database.sqlite
+  DJANGO_MEDIA_ROOT=/opt/wger/media
+  DJANGO_STATIC_ROOT=/opt/wger/static
+  USE_CELERY=True
+  CELERY_BROKER=redis://localhost:6379/2
+  CELERY_BACKEND=redis://localhost:6379/2
+EOF
+msg_ok "Env variables created"
 
 msg_info "Creating wger service"
 cat <<EOF >/etc/apache2/sites-available/wger.conf
@@ -93,14 +105,17 @@ EOF
   systemctl restart apache2
   cat <<EOF >/etc/systemd/system/wger.service
 [Unit]
-Description=wger Service
-After=network.target
+Description=wger (Apache + Django)
+After=network.target apache2.service redis-server.service
+Requires=apache2.service redis-server.service
 
 [Service]
-Type=simple
-User=root
-ExecStart=/opt/wger/.venv/bin/wger start -a 0.0.0.0 -p 3000
-Restart=always
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=/opt/wger/wger.env
+ExecStart=/bin/systemctl start apache2
+ExecStop=/bin/systemctl stop apache2
+ExecReload=/bin/systemctl reload apache2
 
 [Install]
 WantedBy=multi-user.target
@@ -119,12 +134,7 @@ Requires=redis-server.service
 Type=simple
 User=root
 WorkingDirectory=/opt/wger
-Environment=DJANGO_SETTINGS_MODULE=settings.main
-Environment=PYTHONPATH=/opt/wger
-Environment=PYTHONUNBUFFERED=1
-Environment=USE_CELERY=True
-Environment=CELERY_BROKER=redis://localhost:6379/2
-Environment=CELERY_BACKEND=redis://localhost:6379/2
+EnvironmentFile=/opt/wger/wger.env
 ExecStart=/opt/wger/.venv/bin/celery -A wger worker -l info
 Restart=always
 PrivateTmp=true
@@ -155,12 +165,7 @@ msg_info "Creating Celery beat service"
   Type=simple
   User=root
   WorkingDirectory=/opt/wger
-  Environment=DJANGO_SETTINGS_MODULE=settings.main
-  Environment=PYTHONPATH=/opt/wger
-  Environment=USE_CELERY=True
-  Environment=CELERY_BROKER=redis://localhost:6379/2
-  Environment=CELERY_BACKEND=redis://localhost:6379/2
-  Environment=PYTHONUNBUFFERED=1
+  EnvironmentFile=/opt/wger/wger.env
   ExecStart=/opt/wger/.venv/bin/celery -A wger beat -l info --schedule /var/lib/wger/celery/celerybeat-schedule
   Restart=always
   PrivateTmp=true
