@@ -100,8 +100,8 @@ EOF
 msg_ok "Created wger service"
 
 msg_info "Adding nginx"
- cat <<EOF >/etc/nginx/sites-available/wger
- server {
+  cat <<'EOF' >/etc/nginx/sites-available/wger
+server {
     listen 3000;
     server_name _;
 
@@ -124,11 +124,12 @@ msg_info "Adding nginx"
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
-  }
+}
 EOF
 
   ln -sf /etc/nginx/sites-available/wger /etc/nginx/sites-enabled/wger
   rm -f /etc/nginx/sites-enabled/default
+msg_ok "Nginx added"
 
 msg_info "Creating Celery worker service"
   cat <<EOF >/etc/systemd/system/celery.service
