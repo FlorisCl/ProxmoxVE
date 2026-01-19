@@ -16,8 +16,7 @@ update_os
 msg_info "Installing Dependencies"
  $STD apt install -y \
     build-essential \
-    apache2 \
-    libapache2-mod-wsgi-py3 \
+    nginx \
     redis-server \
     rsync
 msg_ok "Installed Dependencies"
@@ -29,6 +28,24 @@ corepack enable
 systemctl enable --now redis-server
 
 fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
+
+msg_info "Creating env variables"
+  cat <<EOF >/opt/wger/wger.env
+  DJANGO_SETTINGS_MODULE=settings.main
+  PYTHONPATH=/opt/wger
+  DJANGO_DB_DATABASE=/opt/wger/db/database.sqlite
+  DJANGO_MEDIA_ROOT=/opt/wger/media
+  DJANGO_STATIC_ROOT=/opt/wger/static
+  DJANGO_STATIC_URL=/static/
+
+  SITE_URL=http://$(hostname -I | awk '{print $1}'):3000
+
+
+  USE_CELERY=True
+  CELERY_BROKER=redis://localhost:6379/2
+  CELERY_BACKEND=redis://localhost:6379/2
+EOF
+msg_ok "Env variables created"
 
 msg_info "Setting up wger"
   mkdir -p /opt/wger/{static,media}
@@ -43,85 +60,75 @@ msg_info "Setting up wger"
   cd /opt/wger
   $STD uv venv
   $STD uv sync
-  $STD uv pip install psycopg2-binary
+  $STD uv pip install gunicorn psycopg2-binary
 
-  export DJANGO_SETTINGS_MODULE=settings.main
-  export PYTHONPATH=/opt/wger
-  export DJANGO_DB_DATABASE=/opt/wger/db/database.sqlite
+  set -a
+  source /opt/wger/wger.env
+  set +a
 
   $STD /opt/wger/.venv/bin/wger bootstrap
   $STD /opt/wger/.venv/bin/python manage.py collectstatic --no-input
-
-
+  chmod -R o+rX /opt/wger/static
+  chmod -R o+rX /opt/wger/media
 
 msg_ok "Finished setting up wger"
 
-msg_info "Creating env variables"
-  cat <<EOF >/opt/wger/wger.env
-  DJANGO_SETTINGS_MODULE=settings.main
-  PYTHONPATH=/opt/wger
-  DJANGO_DB_DATABASE=/opt/wger/db/database.sqlite
-  DJANGO_MEDIA_ROOT=/opt/wger/media
-  DJANGO_STATIC_ROOT=/opt/wger/static
-  USE_CELERY=True
-  CELERY_BROKER=redis://localhost:6379/2
-  CELERY_BACKEND=redis://localhost:6379/2
-EOF
-msg_ok "Env variables created"
-
 msg_info "Creating wger service"
-cat <<EOF >/etc/apache2/sites-available/wger.conf
-<Directory /opt/wger>
-  <Files wsgi.py>
-    Require all granted
-  </Files>
-</Directory>
-
-<VirtualHost *:80>
-  WSGIApplicationGroup %{GLOBAL}
-  WSGIDaemonProcess wger python-path=/opt/wger python-home=/opt/wger/.venv
-  WSGIProcessGroup wger
-  WSGIScriptAlias / /opt/wger/wger/wsgi.py
-  WSGIPassAuthorization On
-
-  Alias /static/ /opt/wger/static/
-  <Directory /opt/wger/static>
-    Require all granted
-  </Directory>
-
-  Alias /media/ /opt/wger/media/
-  <Directory /opt/wger/media>
-    Require all granted
-  </Directory>
-
-  ErrorLog /var/log/apache2/wger-error.log
-  CustomLog /var/log/apache2/wger-access.log combined
-</VirtualHost>
-EOF
-
-  $STD a2dissite 000-default.conf
-  $STD a2ensite wger
-
-  systemctl restart apache2
   cat <<EOF >/etc/systemd/system/wger.service
 [Unit]
-Description=wger (Apache + Django)
-After=network.target apache2.service redis-server.service
-Requires=apache2.service redis-server.service
+Description=wger (Gunicorn + Django)
+After=network.target redis-server.service
+Requires=redis-server.service
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+User=root
+Group=root
+WorkingDirectory=/opt/wger
 EnvironmentFile=/opt/wger/wger.env
-ExecStart=/bin/systemctl start apache2
-ExecStop=/bin/systemctl stop apache2
-ExecReload=/bin/systemctl reload apache2
+ExecStart=/opt/wger/.venv/bin/gunicorn \
+  --bind 127.0.0.1:8000 \
+  --workers 3 \
+  --threads 2 \
+  --timeout 120 \
+  wger.wsgi:application
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
 EOF
   systemctl enable -q --now wger
 msg_ok "Created wger service"
+
+msg_info "Adding nginx"
+ cat <<EOF >/etc/nginx/sites-available/wger
+ server {
+    listen 3000;
+    server_name _;
+
+    client_max_body_size 20M;
+
+    location /static/ {
+        alias /opt/wger/static/;
+        access_log off;
+        expires 30d;
+    }
+
+    location /media/ {
+        alias /opt/wger/media/;
+        access_log off;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+  }
+EOF
+
+  ln -sf /etc/nginx/sites-available/wger /etc/nginx/sites-enabled/wger
+  rm -f /etc/nginx/sites-enabled/default
 
 msg_info "Creating Celery worker service"
   cat <<EOF >/etc/systemd/system/celery.service
@@ -145,8 +152,6 @@ ReadWritePaths=/opt/wger
 [Install]
 WantedBy=multi-user.target
 EOF
-  systemctl daemon-reload
-  systemctl enable --now celery
 msg_ok "Celery service created"
 
 msg_info "Creating Celery beat service"
@@ -176,8 +181,13 @@ msg_info "Creating Celery beat service"
   [Install]
   WantedBy=multi-user.target
 EOF
-  systemctl enable --now celery-beat
 msg_ok "Created Celery beat service"
+
+systemctl daemon-reload
+systemctl enable --now wger
+systemctl enable --now celery
+systemctl enable --now celery-beat
+systemctl enable --now nginx
 
 # # --------------------------------------------------
 # # Constants
