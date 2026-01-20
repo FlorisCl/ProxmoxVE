@@ -55,6 +55,8 @@ DJANGO_STATIC_URL=/static/
 # Cache (Mandatory for wger)
 DJANGO_CACHE_BACKEND=django_redis.cache.RedisCache
 DJANGO_CACHE_LOCATION=redis://127.0.0.1:6379/1
+DJANGO_CACHE_TIMEOUT=300
+DJANGO_CACHE_CLIENT_CLASS=django_redis.client.DefaultClient
 
 # URL
 SITE_URL=${WG_URL}
