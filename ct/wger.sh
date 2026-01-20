@@ -40,6 +40,10 @@ function update_script() {
         msg_info "Updating dependencies"
         cd /opt/wger
 
+        PYTHON_VERSION="3.13" setup_uv
+        NODE_VERSION="22" NODE_MODULE="npm,sass" setup_nodejs
+        corepack enable
+
         $STD uv sync
         msg_ok "Dependencies updated"
         
@@ -56,7 +60,6 @@ function update_script() {
         
         if command -v npm &>/dev/null && [[ -f package.json ]]; then
             msg_info "Building frontend assets"
-            corepack enable || true
             $STD npm install
             $STD npm run build:css:sass
             msg_ok "Frontend assets built"
