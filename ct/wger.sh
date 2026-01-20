@@ -35,16 +35,15 @@ function update_script() {
         systemctl stop redis-server nginx celery celery-beat wger 2>/dev/null || true
         msg_ok "Services stopped"
 
-        fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
-        
-        msg_info "Updating dependencies"
-        cd /opt/wger
-
         PYTHON_VERSION="3.13" setup_uv
         NODE_VERSION="22" NODE_MODULE="npm,sass" setup_nodejs
         corepack enable
 
-        $STD uv sync
+        fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
+        
+        msg_info "Updating dependencies"
+            cd /opt/wger
+            $STD uv sync
         msg_ok "Dependencies updated"
         
        msg_info "Running database migrations"
