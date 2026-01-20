@@ -43,7 +43,7 @@ function update_script() {
         
         msg_info "Updating dependencies"
             cd /opt/wger
-            $STD uv sync
+            $STD /usr/local/bin/uv sync
         msg_ok "Dependencies updated"
         
        msg_info "Running database migrations"
