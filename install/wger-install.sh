@@ -29,21 +29,46 @@ systemctl enable --now redis-server
 
 fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
 
+WG_IP="$(hostname -I | awk '{print $1}')"
+WG_PORT="3000"
+WG_URL="http://${WG_IP}:${WG_PORT}"
+
 msg_info "Creating env variables"
-  cat <<EOF >/opt/wger/wger.env
-  DJANGO_SETTINGS_MODULE=settings.main
-  PYTHONPATH=/opt/wger
-  DJANGO_DB_DATABASE=/opt/wger/db/database.sqlite
-  DJANGO_MEDIA_ROOT=/opt/wger/media
-  DJANGO_STATIC_ROOT=/opt/wger/static
-  DJANGO_STATIC_URL=/static/
+cat <<EOF >/opt/wger/wger.env
+DJANGO_SETTINGS_MODULE=settings.main
+PYTHONPATH=/opt/wger
 
-  SITE_URL=http://$(hostname -I | awk '{print $1}'):3000
+# Networking / security
+ALLOWED_HOSTS=$(hostname -I | awk '{print $1}'),localhost,127.0.0.1
+CSRF_TRUSTED_ORIGINS==http://$(hostname -I | awk '{print $1}'):3000
 
+USE_X_FORWARDED_HOST=True
+SECURE_PROXY_SSL_HEADER=HTTP_X_FORWARDED_PROTO,http
 
-  USE_CELERY=True
-  CELERY_BROKER=redis://localhost:6379/2
-  CELERY_BACKEND=redis://localhost:6379/2
+SESSION_COOKIE_SECURE=False
+CSRF_COOKIE_SECURE=False
+SESSION_COOKIE_SAMESITE=Lax
+CSRF_COOKIE_SAMESITE=Lax
+
+# Paths
+DJANGO_DB_DATABASE=/opt/wger/db/database.sqlite
+DJANGO_MEDIA_ROOT=/opt/wger/media
+DJANGO_STATIC_ROOT=/opt/wger/static
+DJANGO_STATIC_URL=/static/
+
+# Cache (MANDATORY for wger)
+DJANGO_CACHE_BACKEND=django_redis.cache.RedisCache
+DJANGO_CACHE_LOCATION=redis://127.0.0.1:6379/1
+DJANGO_CACHE_TIMEOUT=300
+DJANGO_CACHE_CLIENT_CLASS=django_redis.client.DefaultClient
+
+# URL
+SITE_URL=http://$(hostname -I | awk '{print $1}'):3000
+
+# Celery
+USE_CELERY=True
+CELERY_BROKER=redis://localhost:6379/2
+CELERY_BACKEND=redis://localhost:6379/2
 EOF
 msg_ok "Env variables created"
 
@@ -120,9 +145,14 @@ server {
 
     location / {
         proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $remote_addr;
-        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        proxy_redirect off;
     }
 }
 EOF
@@ -189,6 +219,7 @@ systemctl enable --now wger
 systemctl enable --now celery
 systemctl enable --now celery-beat
 systemctl enable --now nginx
+systemctl restart nginx
 
 # # --------------------------------------------------
 # # Constants
