@@ -25,16 +25,12 @@ function update_script() {
     check_container_storage
     check_container_resources
     
-    WGER_HOME="/home/wger"
-    WGER_SRC="${WGER_HOME}/src"
-    WGER_VENV="${WGER_HOME}/venv"
-    
     if [[ ! -d "/opt/wger" ]]; then
         msg_error "No ${APP} Installation Found!"
         exit 1
     fi
 
-    if check_for_gh_release "wger" "wger-project/wger"; then
+    # if check_for_gh_release "wger" "wger-project/wger"; then
         msg_info "Stopping services"
         systemctl stop redis-server nginx celery celery-beat wger 2>/dev/null || true
         msg_ok "Services stopped"
@@ -50,8 +46,11 @@ function update_script() {
         $STD uv sync
         msg_ok "Dependencies updated"
         
-        msg_info "Running database migrations"
-        $STD "/opt/wger/.venv/bin/python" manage.py migrate --no-input
+       msg_info "Running database migrations"
+            set -a
+            source /opt/wger/wger.env
+            set +a
+            $STD /opt/wger/.venv/bin/python manage.py migrate --no-input
         msg_ok "Database migrated"
         
         msg_info "Collecting static files"
@@ -60,6 +59,7 @@ function update_script() {
         
         if command -v npm &>/dev/null && [[ -f package.json ]]; then
             msg_info "Building frontend assets"
+            corepack enable || true
             $STD npm install
             $STD npm run build:css:sass
             msg_ok "Frontend assets built"
@@ -68,12 +68,12 @@ function update_script() {
         fi
         
         msg_info "Starting services"
-        systemctl start redis-server nginx wger celery celery-beat
+        systemctl start redis-server wger celery celery-beat nginx
         msg_ok "Services started"
         
-    else
-        msg_info "No update required. ${APP} is already up-to-date."
-    fi
+    # else
+        # msg_info "No update required. ${APP} is already up-to-date."
+    # fi
     exit 0
 }
 
