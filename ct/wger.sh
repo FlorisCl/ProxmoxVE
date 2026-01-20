@@ -36,9 +36,6 @@ function update_script() {
         msg_ok "Services stopped"
 
         fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
-    
-        
-        msg_info "Downloading version ${RELEASE}"
         
         msg_info "Updating dependencies"
         cd /opt/wger
