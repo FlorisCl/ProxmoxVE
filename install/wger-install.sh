@@ -214,12 +214,16 @@ msg_info "Creating Celery beat service"
 EOF
 msg_ok "Created Celery beat service"
 
+systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable --now wger
 systemctl enable --now celery
 systemctl enable --now celery-beat
 systemctl enable --now nginx
+systemctl restart wger
+systemctl restart celery
 systemctl restart nginx
+
 
 # # --------------------------------------------------
 # # Constants
