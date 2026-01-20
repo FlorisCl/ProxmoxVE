@@ -56,7 +56,7 @@ DJANGO_MEDIA_ROOT=/opt/wger/media
 DJANGO_STATIC_ROOT=/opt/wger/static
 DJANGO_STATIC_URL=/static/
 
-# Cache (MANDATORY for wger)
+# Cache (Mandatory for wger)
 DJANGO_CACHE_BACKEND=django_redis.cache.RedisCache
 DJANGO_CACHE_LOCATION=redis://127.0.0.1:6379/1
 DJANGO_CACHE_TIMEOUT=300
@@ -146,11 +146,11 @@ server {
     location / {
         proxy_pass http://127.0.0.1:8000;
 
-        proxy_set_header Host \$host;
-        proxy_set_header X-Forwarded-Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
 
         proxy_redirect off;
     }
