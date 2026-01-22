@@ -79,7 +79,7 @@ msg_info "Setting up wger"
   cd /opt/wger
   $STD uv venv
   $STD uv sync --group docker
-  $STD uv pip install psycopg[binary]
+  $STD uv pip install psycopg2-binary
 
   set -a
   source /opt/wger/wger.env
