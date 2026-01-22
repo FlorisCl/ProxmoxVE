@@ -42,6 +42,9 @@ function update_script() {
         fetch_and_deploy_gh_release "wger" "wger-project/wger" "tarball" "latest"
         
         msg_info "Updating dependencies"
+            $STD apt update
+            $STD apt -y upgrade
+            
             cd /opt/wger
             $STD /usr/local/bin/uv sync
         msg_ok "Dependencies updated"

@@ -57,6 +57,7 @@ DJANGO_CACHE_BACKEND=django_redis.cache.RedisCache
 DJANGO_CACHE_LOCATION=redis://127.0.0.1:6379/1
 DJANGO_CACHE_TIMEOUT=300
 DJANGO_CACHE_CLIENT_CLASS=django_redis.client.DefaultClient
+AXES_CACHE_ALIAS=default
 
 # URL
 SITE_URL=${WG_URL}
@@ -211,4 +212,8 @@ systemctl enable --now redis-server nginx wger celery celery-beat
 systemctl restart wger
 systemctl restart celery
 systemctl restart nginx
+
+motd_ssh
+customize
+cleanup_lxc
 
