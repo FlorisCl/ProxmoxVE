@@ -87,7 +87,7 @@ msg_info "Setting up wger"
 
   $STD source /opt/wger/.venv/bin/activate
   $STD wger bootstrap
-  $STD manage.py collectstatic --no-input
+  $STD python manage.py collectstatic --no-input
 
 msg_ok "Finished setting up wger"
 
