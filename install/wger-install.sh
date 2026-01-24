@@ -206,12 +206,12 @@ msg_info "Creating Celery beat service"
 EOF
 msg_ok "Created Celery beat service"
 
-systemctl daemon-reexec
-systemctl daemon-reload
-systemctl enable --now redis-server nginx wger celery celery-beat 
-systemctl restart wger
-systemctl restart celery
-systemctl restart nginx
+$STD systemctl daemon-reexec
+$STD systemctl daemon-reload
+$STD systemctl enable --now redis-server nginx wger celery celery-beat 
+$STD systemctl restart wger
+$STD systemctl restart celery
+$STD systemctl restart nginx
 
 motd_ssh
 customize
