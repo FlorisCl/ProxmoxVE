@@ -55,14 +55,11 @@ function update_script() {
             set -a
             source /opt/wger/wger.env
             set +a
-
-            $STD source /opt/wger/.venv/bin/activate
-
-            $STD python manage.py migrate --no-input
+            $STD /opt/wger/.venv/bin/python manage.py migrate --no-input
         msg_ok "Database migrated"
         
         msg_info "Collecting static files"
-        $STD python manage.py collectstatic --no-input
+            $STD /opt/wger/.venv/bin/python manage.py collectstatic --no-input
         msg_ok "Static files collected"      
         
         if command -v npm &>/dev/null && [[ -f package.json ]]; then
