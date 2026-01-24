@@ -47,7 +47,7 @@ function update_script() {
             
             cd /opt/wger
 
-            $STD /usr/local/bin/uv sync
+            $STD uv sync --group docker
             $STD uv pip install psycopg2-binary
         msg_ok "Dependencies updated"
         
@@ -55,11 +55,11 @@ function update_script() {
             set -a
             source /opt/wger/wger.env
             set +a
-            $STD /opt/wger/.venv/bin/python manage.py migrate --no-input
+            $STD uv run manage.py migrate --no-input
         msg_ok "Database migrated"
         
         msg_info "Collecting static files"
-            $STD /opt/wger/.venv/bin/python manage.py collectstatic --no-input
+            $STD uv run python manage.py collectstatic --no-input
         msg_ok "Static files collected"      
         
         if command -v npm &>/dev/null && [[ -f package.json ]]; then
