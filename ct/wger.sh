@@ -55,6 +55,9 @@ function update_script() {
             set -a
             source /opt/wger/wger.env
             set +a
+
+            $STD source /opt/wger/.venv/bin/activate
+
             $STD python manage.py migrate --no-input
         msg_ok "Database migrated"
         
